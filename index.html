@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Predictor</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <a class="brand" href="/">
+        <span class="logo">SP</span>
+        Student<span class="brand-light">Insight</span>
+    </a>
+    <span class="badge">Machine Learning System</span>
+</header>
+
+<main>
+    <section class="hero">
+        <p class="eyebrow">STUDENT PERFORMANCE PREDICTION</p>
+        <h1>Understand performance.<br>
+            <span>Support potential.</span>
+        </h1>
+        <p class="hero-text">
+            Estimate final-period marks using study habits,
+            previous grades, attendance and student support details.
+        </p>
+    </section>
+
+    <section class="layout">
+        <div class="form-card">
+            <p class="eyebrow">STUDENT DETAILS</p>
+            <h2>Make a prediction</h2>
+            <p class="subtext">Complete all fields to estimate final marks.</p>
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+                <h3>Academic information</h3>
+
+                <div class="fields">
+                    <div class="field">
+                        <label for="studytime">Weekly study time</label>
+                        <select id="studytime" name="studytime" required>
+                            <option value="" disabled
+                                {% if not values.get('studytime') %}selected{% endif %}>
+                                Select study time
+                            </option>
+                            <option value="1"
+                                {% if values.get('studytime') == '1' %}selected{% endif %}>
+                                Under 2 hours
+                            </option>
+                            <option value="2"
+                                {% if values.get('studytime') == '2' %}selected{% endif %}>
+                                2–5 hours
+                            </option>
+                            <option value="3"
+                                {% if values.get('studytime') == '3' %}selected{% endif %}>
+                                5–10 hours
+                            </option>
+                            <option value="4"
+                                {% if values.get('studytime') == '4' %}selected{% endif %}>
+                                Over 10 hours
+                            </option>
+                        </select>
+                        <small>Approximate hours per week</small>
+                    </div>
+
+                    <div class="field">
+                        <label for="absences">School absences</label>
+                        <input id="absences" name="absences" type="number"
+                               min="0" max="93" step="1"
+                               placeholder="Enter absences"
+                               value="{{ values.get('absences', '') }}" required>
+                        <small>Number of absences</small>
+                    </div>
+
+                    <div class="field">
+                        <label for="g1">G1 · First-period marks</label>
+                        <input id="g1" name="g1" type="number"
+                               min="0" max="20" step="1"
+                               placeholder="Marks out of 20"
+                               value="{{ values.get('g1', '') }}" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="g2">G2 · Second-period marks</label>
+                        <input id="g2" name="g2" type="number"
+                               min="0" max="20" step="1"
+                               placeholder="Marks out of 20"
+                               value="{{ values.get('g2', '') }}" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="failures">Previous class failures</label>
+                        <select id="failures" name="failures" required>
+                            <option value="" disabled
+                                {% if not values.get('failures') %}selected{% endif %}>
+                                Select number
+                            </option>
+                            {% for n in range(5) %}
+                            <option value="{{ n }}"
+                                {% if values.get('failures') == n|string %}selected{% endif %}>
+                                {{ n }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <h3 class="second-heading">Student support and access</h3>
+
+                <div class="fields three">
+                    <div class="field">
+                        <label for="schoolsup">School support</label>
+                        <select id="schoolsup" name="schoolsup" required>
+                            <option value="" disabled
+                                {% if not values.get('schoolsup') %}selected{% endif %}>
+                                Select
+                            </option>
+                            <option value="Yes"
+                                {% if values.get('schoolsup') == 'Yes' %}selected{% endif %}>
+                                Yes
+                            </option>
+                            <option value="No"
+                                {% if values.get('schoolsup') == 'No' %}selected{% endif %}>
+                                No
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="famsup">Family support</label>
+                        <select id="famsup" name="famsup" required>
+                            <option value="" disabled
+                                {% if not values.get('famsup') %}selected{% endif %}>
+                                Select
+                            </option>
+                            <option value="Yes"
+                                {% if values.get('famsup') == 'Yes' %}selected{% endif %}>
+                                Yes
+                            </option>
+                            <option value="No"
+                                {% if values.get('famsup') == 'No' %}selected{% endif %}>
+                                No
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="internet">Internet access</label>
+                        <select id="internet" name="internet" required>
+                            <option value="" disabled
+                                {% if not values.get('internet') %}selected{% endif %}>
+                                Select
+                            </option>
+                            <option value="Yes"
+                                {% if values.get('internet') == 'Yes' %}selected{% endif %}>
+                                Yes
+                            </option>
+                            <option value="No"
+                                {% if values.get('internet') == 'No' %}selected{% endif %}>
+                                No
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit">
+                    Predict student performance <span>→</span>
+                </button>
+            </form>
+        </div>
+
+        <aside class="result-card">
+            <p class="eyebrow light">PREDICTION OUTPUT</p>
+
+            {% if result %}
+                <p class="result-label">Estimated final marks</p>
+                <div class="score">
+                    {{ "%.2f"|format(result.marks) }}<span>/20</span>
+                </div>
+
+                <div class="progress">
+                    <div style="width: {{ result.percentage }}%"></div>
+                </div>
+
+                <h2>{{ result.percentage }}%</h2>
+                <p class="percentage-label">Predicted G3 percentage</p>
+
+                <div class="category {{ result.level }}">
+                    {{ result.category }}
+                </div>
+
+                <p class="result-message">{{ result.message }}</p>
+                <a class="reset" href="/">↻ Make another prediction</a>
+            {% else %}
+                <div class="symbol">✦</div>
+                <h2>Your result will<br>appear here.</h2>
+                <p class="empty-text">
+                    Enter the student details and click the prediction
+                    button to see the model's estimate.
+                </p>
+                <div class="result-list">
+                    <p><span>Final marks</span><b>Out of 20</b></p>
+                    <p><span>Percentage</span><b>Calculated from marks</b></p>
+                    <p><span>Category</span><b>Performance range</b></p>
+                </div>
+            {% endif %}
+        </aside>
+    </section>
+
+    <section class="how">
+        <p class="eyebrow">HOW IT WORKS</p>
+        <h2>From student details to an estimate.</h2>
+        <div class="how-grid">
+            <article>
+                <span>01</span>
+                <h3>Enter details</h3>
+                <p>Provide academic marks, study time, absences and support information.</p>
+            </article>
+            <article>
+                <span>02</span>
+                <h3>Machine learning</h3>
+                <p>The trained Random Forest model uses patterns learned from data.</p>
+            </article>
+            <article>
+                <span>03</span>
+                <h3>View prediction</h3>
+                <p>See estimated final marks, percentage and performance category.</p>
+            </article>
+        </div>
+    </section>
+
+    
+</main>
